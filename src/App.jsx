@@ -29,8 +29,8 @@ const styles = `
   }
 `;
 
-// --- 2. SPOTLIGHT CARD ---
-const SpotlightCard = ({ children, className = "", noPadding = false, borderColor = "border-zinc-800" }) => {
+// --- 2. SPOTLIGHT CARD (Updated for High-Intensity Constant Glow) ---
+const SpotlightCard = ({ children, className = "", noPadding = false, isScanning = false, scanColor = "emerald" }) => {
   const divRef = useRef(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [opacity, setOpacity] = useState(0);
@@ -41,28 +41,33 @@ const SpotlightCard = ({ children, className = "", noPadding = false, borderColo
     setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
   };
 
+  // Intense Scanning State Logic
+  const glowStyles = isScanning 
+    ? scanColor === "emerald" 
+      ? "border-emerald-500/60 shadow-[0_0_40px_rgba(16,185,129,0.3)] bg-[#0c120e]" 
+      : "border-purple-500/60 shadow-[0_0_40px_rgba(168,85,247,0.3)] bg-[#0f0a1f]"
+    : "border-zinc-800 bg-[#09090b]";
+
   return (
     <div className={`relative group rounded-3xl ${className}`}>
-        {/* SNAKE BORDER LAYER */}
-        <div className="absolute -inset-[1px] rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r from-transparent via-emerald-500 to-transparent animate-snake-border blur-sm" />
+        {/* Snake Border Layer - Forced visible during scanning */}
+        <div className={`absolute -inset-[1px] rounded-3xl transition-opacity duration-500 bg-gradient-to-r from-transparent ${scanColor === "emerald" ? "via-emerald-500" : "via-purple-500"} to-transparent animate-snake-border blur-sm ${isScanning ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
         
-        {/* MAIN CARD CONTENT */}
         <div
             ref={divRef}
             onMouseMove={handleMouseMove}
             onMouseEnter={() => setOpacity(1)}
             onMouseLeave={() => setOpacity(0)}
-            className={`relative h-full overflow-hidden rounded-3xl border ${borderColor} bg-[#09090b] shadow-2xl transition-all duration-300 ${noPadding ? 'p-0' : 'p-6 md:p-8'}`}
+            className={`relative h-full overflow-hidden rounded-3xl border transition-all duration-500 shadow-2xl ${glowStyles} ${noPadding ? 'p-0' : 'p-6 md:p-8'}`}
         >
-            {/* Spotlight Gradient */}
+            {/* Spotlight Gradient - Forced partially visible during scan to enhance glowness */}
             <div
-                className="pointer-events-none absolute -inset-px opacity-0 transition duration-300 z-0"
+                className="pointer-events-none absolute -inset-px transition duration-300 z-0"
                 style={{
-                opacity,
-                background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, rgba(16, 185, 129, 0.15), transparent 40%)`,
+                opacity: isScanning ? 0.3 : opacity,
+                background: `radial-gradient(600px circle at ${isScanning ? '50%' : position.x + 'px'} ${isScanning ? '50%' : position.y + 'px'}, ${scanColor === "emerald" ? "rgba(16, 185, 129, 0.15)" : "rgba(168, 85, 247, 0.15)"}, transparent 40%)`,
                 }}
             />
-            {/* Content */}
             <div className="relative z-10 h-full">{children}</div>
         </div>
     </div>
@@ -70,13 +75,11 @@ const SpotlightCard = ({ children, className = "", noPadding = false, borderColo
 };
 
 // --- 3. ANIMATED TEXT COMPONENT ---
-const GradientText = ({ children, className = "" }) => {
-  return (
-    <span className={`bg-gradient-to-r from-emerald-400 via-teal-200 to-emerald-500 bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient ${className}`}>
-      {children}
-    </span>
-  );
-};
+const GradientText = ({ children, className = "" }) => (
+  <span className={`bg-gradient-to-r from-emerald-400 via-teal-200 to-emerald-500 bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient ${className}`}>
+    {children}
+  </span>
+);
 
 function App() {
   const [hasEntered, setHasEntered] = useState(false);
@@ -86,10 +89,8 @@ function App() {
   const [scanResult, setScanResult] = useState(null);
   const [globalThreats, setGlobalThreats] = useState(15210); 
 
-  // REF FOR AUTO-SCROLL
   const dashboardRef = useRef(null);
 
-  // --- LOGIC ---
   useEffect(() => {
     const interval = setInterval(() => {
       setGlobalThreats(prev => prev + Math.floor(Math.random() * 15) + 1);
@@ -106,20 +107,16 @@ function App() {
     const randomDomain = domains[Math.floor(Math.random() * domains.length)];
     const poisonedEmail = `${randomPrefix}${randomSuffix}${Math.random().toString(36).substring(7)}${randomDomain}`;
     const poisonedPass = Math.random().toString(36).slice(-10) + "!" + (Math.floor(Math.random() * 900) + 100);
-    setLogs(prev => [...prev, `[BAIT] Generated toxic payload for ${url || 'target'}`]);
+    setLogs(prev => [...prev, `[BAIT] Generated toxic payload for target`]);
     return { email: poisonedEmail, password: poisonedPass };
   };
 
   const startScan = async () => {
     if (!url) return;
-    
-    // 1. UPDATE STATE FIRST
     setIsScanning(true);
     setScanResult(null);
     setLogs(prev => [...prev, `[TARGET] Analyzing: ${url}`, '[NETWORK] Handshaking with HQ...']);
 
-    // 2. SCROLL AFTER SMALL DELAY (FIXED)
-    // This timeout ensures the UI has re-rendered before scrolling
     setTimeout(() => {
         if (dashboardRef.current) {
             dashboardRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -154,25 +151,13 @@ function App() {
       <style>{styles}</style>
       
       <div className={`min-h-screen w-full relative overflow-x-hidden bg-black text-zinc-100 font-sans selection:bg-emerald-500/30`}>
-        
-        {/* 3D Background */}
-        <div className="opacity-40 fixed inset-0 pointer-events-none">
-          <Background3D />
-        </div>
-
-        {/* Global Green Haze Overlay */}
+        <div className="opacity-40 fixed inset-0 pointer-events-none"><Background3D /></div>
         <div className="fixed inset-0 z-10 pointer-events-none bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.08)_0%,rgba(0,0,0,0)_80%)]" />
 
-        {/* Intro Screen */}
-        <AnimatePresence>
-          {!hasEntered && <IntroScreen onEnter={() => setHasEntered(true)} />}
-        </AnimatePresence>
+        <AnimatePresence>{!hasEntered && <IntroScreen onEnter={() => setHasEntered(true)} />}</AnimatePresence>
 
-        {/* MAIN CONTENT */}
         {hasEntered && (
           <div className="relative z-20 max-w-7xl mx-auto px-4 py-6 md:px-8 md:py-8 animate-fade-in">
-              
-              {/* === NAVBAR === */}
               <nav className="flex flex-col md:flex-row justify-between items-center mb-16 md:mb-24 pt-4 gap-6 md:gap-0 text-center md:text-left">
                   <div className="flex items-center gap-4">
                       <div className="bg-emerald-500/10 p-2 rounded-xl border border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
@@ -182,7 +167,6 @@ function App() {
                           CYBER<span className="text-zinc-600 mx-2">/</span>GHOST<span className="text-zinc-600 mx-2">/</span>BUSTER
                       </span>
                   </div>
-                  
                   <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8 text-xs font-medium tracking-wide text-zinc-400">
                       <div className="flex items-center gap-2">
                           <Globe className="w-3 h-3 text-zinc-500" /> 
@@ -195,11 +179,12 @@ function App() {
                   </div>
               </nav>
 
-              {/* === HERO SECTION === */}
               <div className="flex flex-col items-center justify-center text-center mb-28 max-w-4xl mx-auto relative px-2">
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[600px] h-[300px] md:h-[400px] bg-emerald-500/20 blur-[120px] rounded-full pointer-events-none -z-10"></div>
                   
-                  
+                  <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold mb-10 tracking-widest uppercase shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                      <Zap className="w-3 h-3" /> V3.0 NOW LIVE
+                  </motion.div>
                   
                   <h1 className="text-3xl md:text-6xl font-extrabold tracking-tight mb-8 text-white leading-tight">
                       Defend against the <br className="hidden md:block"/> <GradientText>invisible.</GradientText>
@@ -223,7 +208,6 @@ function App() {
                   </div>
               </div>
 
-              {/* === FEATURE CARDS === */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-32">
                   <SpotlightCard>
                       <div className="bg-zinc-900/50 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 border border-zinc-800"><ShieldCheck className="w-7 h-7 text-emerald-500 neon-glow" /></div>
@@ -242,54 +226,58 @@ function App() {
                   </SpotlightCard>
               </div>
 
-              {/* === DASHBOARD SECTION === */}
               <div ref={dashboardRef} className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-12 border-t border-zinc-900 scroll-mt-6">
                   
-                  {/* LEFT: TERMINAL */}
-                  <div className="lg:col-span-7 flex flex-col gap-3">
-                      <div className="flex items-center gap-2 px-1">
-                          <TerminalIcon className="w-4 h-4 text-zinc-500" />
-                          <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">LIVE EXECUTION LOGS</h3>
+                  {/* LEFT: TERMINAL + BAITGENERATOR */}
+                  <div className="lg:col-span-7 flex flex-col gap-6">
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-2 px-1">
+                            <TerminalIcon className="w-4 h-4 text-zinc-500" />
+                            <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">LIVE EXECUTION LOGS</h3>
+                        </div>
+                        <SpotlightCard isScanning={isScanning} scanColor="emerald" className="h-[400px] md:h-[520px]" noPadding={true}>
+                            <div className="h-full w-full p-4 md:p-6 overflow-hidden relative flex flex-col">
+                                <div className={`absolute left-0 top-0 bottom-0 w-1 transition-colors duration-500 ${isScanning ? "bg-emerald-500" : "bg-emerald-500/20"}`}></div>
+                                <Terminal logs={logs} isScanning={isScanning} />
+                            </div>
+                        </SpotlightCard>
                       </div>
-                      
-                      {/* Terminal Card */}
-                      <SpotlightCard className="h-[400px] md:h-[520px]" noPadding={true}>
-                          <div className="h-full w-full bg-black/50 p-4 md:p-6 overflow-hidden relative flex flex-col">
-                              <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/20"></div>
-                              <Terminal logs={logs} isScanning={isScanning} />
-                          </div>
-                      </SpotlightCard>
+
+                      <AnimatePresence>
+                        {scanResult?.verdict === 'MALICIOUS' && (
+                          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full">
+                            <BaitGenerator onGenerate={generatePoison} />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                   </div>
 
                   {/* RIGHT: WIDGETS */}
                   <div className="lg:col-span-5 flex flex-col gap-6">
-                      
-                      {/* RADAR CARD */}
                       <div className="flex flex-col gap-3">
                         <div className="flex items-center gap-2 px-1">
                             <Activity className="w-4 h-4 text-emerald-500" />
                             <h3 className="text-xs font-bold text-emerald-600 uppercase tracking-widest">ACTIVE SCAN</h3>
                         </div>
-                        <SpotlightCard className="h-[280px]" noPadding={true}>
+                        <SpotlightCard isScanning={isScanning} scanColor="emerald" className="h-[280px]" noPadding={true}>
                              <div className="h-full w-full flex items-center justify-center relative bg-black/20">
                                 <GhostRadar isScanning={isScanning} />
                              </div>
                         </SpotlightCard>
                       </div>
 
-                      {/* THREAT REPORT */}
                       <div className="flex-1 min-h-[200px] flex flex-col gap-3">
                            <div className="flex items-center gap-2 px-1">
                               <FileWarning className="w-4 h-4 text-purple-500" />
                               <h3 className="text-xs font-bold text-purple-500 uppercase tracking-widest">THREAT INTELLIGENCE</h3>
                            </div>
-                           <div className="h-full rounded-3xl border border-purple-500/30 bg-[#0F0A1F] p-0 relative overflow-hidden shadow-2xl group hover:border-purple-500/60 transition-colors">
-                              <div className="absolute top-0 left-0 w-full h-1 bg-purple-500"></div>
-                              
-                              <div className="p-6 h-full flex flex-col">
+                           
+                           <SpotlightCard isScanning={isScanning} scanColor="purple" noPadding={true} className="flex-1">
+                              <div className="p-6 h-full flex flex-col relative">
+                                  <div className={`absolute top-0 left-0 w-full h-1 bg-purple-500 transition-opacity duration-500 ${isScanning ? "opacity-100" : "opacity-50"}`}></div>
                                   <div className="flex items-center gap-3 mb-4 pb-4 border-b border-purple-500/20">
                                       <ShieldCheck className="w-5 h-5 text-purple-400" />
-                                      <span className="text-sm font-bold text-white tracking-wider">THREAT_REPORT</span>
+                                      <span className="text-sm font-bold text-white tracking-wider uppercase">THREAT_REPORT</span>
                                   </div>
 
                                   <div className="flex-1 flex flex-col items-center justify-center text-purple-300/30 gap-3 min-h-[120px]">
@@ -297,20 +285,21 @@ function App() {
                                           <Report scanResult={scanResult} isScanning={isScanning} />
                                       ) : (
                                           <>
-                                            <div className="w-16 h-16 rounded-xl border-2 border-dashed border-purple-500/30 flex items-center justify-center">
+                                            <div className={`w-16 h-16 rounded-xl border-2 border-dashed flex items-center justify-center transition-colors duration-500 ${isScanning ? "border-purple-500 animate-pulse shadow-[0_0_15px_rgba(168,85,247,0.4)]" : "border-purple-500/30"}`}>
                                                 <div className="w-2 h-2 bg-purple-500/30 rounded-full"></div>
                                             </div>
-                                            <span className="text-[10px] font-mono tracking-widest uppercase">NO_DATA_CAPTURED</span>
+                                            <span className="text-[10px] font-mono tracking-widest uppercase">
+                                              {isScanning ? "PROCESSING_SATELLITE_DATA" : "NO_DATA_CAPTURED"}
+                                            </span>
                                           </>
                                       )}
                                   </div>
                               </div>
-                           </div>
+                           </SpotlightCard>
                       </div>
                   </div>
               </div>
               
-              {/* FOOTER */}
               <div className="mt-20 py-8 text-center border-t border-zinc-900/50">
                   <p className="text-zinc-700 text-xs">
                       © 2026 CYBER-GHOST-BUSTER. All rights reserved. <span className="text-zinc-600">System V3.4.0</span>
