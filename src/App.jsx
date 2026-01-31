@@ -11,21 +11,59 @@ function App() {
   const [logs, setLogs] = useState(['[SYSTEM] Ghost-Buster V1.0 initialized...', '[SYSTEM] Awaiting target URL...']);
   const [scanResult, setScanResult] = useState(null);
 
-  const startScan = () => {
+  // --- THE POISON LOGIC ---
+  const generatePoison = () => {
+    const prefixes = ['admin', 'secure', 'root', 'vault', 'crypto', 'shadow'];
+    const suffixes = ['_trap', '_bait', '99', '!', 'X', 'gate'];
+    const domains = ['@gmail.com', '@outlook.com', '@yahoo.com', '@proton.me'];
+    
+    const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const randomSuffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+    const randomDomain = domains[Math.floor(Math.random() * domains.length)];
+    
+    const poisonedEmail = `${randomPrefix}${randomSuffix}${Math.random().toString(36).substring(7)}${randomDomain}`;
+    const poisonedPass = Math.random().toString(36).slice(-10) + "!" + (Math.floor(Math.random() * 900) + 100);
+
+    // FIX: Use the current 'url' state for the log
+    setLogs(prev => [...prev, `[BAIT] Generated toxic payload for ${url || 'target'}`]);
+
+    return { email: poisonedEmail, password: poisonedPass };
+  };
+
+  const startScan = async () => {
     if (!url) return;
+    
     setIsScanning(true);
     setScanResult(null);
-    setLogs(prev => [...prev, `[INFILTRATE] Target: ${url}`, '[PROCESS] Deploying Ghost Agent...']);
+    setLogs(prev => [...prev, `[INFILTRATE] Target: ${url}`, '[PROCESS] Contacting Backend HQ...']);
 
-    setTimeout(() => {
-      setIsScanning(false);
-      setLogs(prev => [...prev, '[ANALYSIS] Threats identified.', '[SUCCESS] Complete.']);
-      setScanResult({
-        verdict: 'MALICIOUS',
-        riskScore: 88,
-        threats: ['Credential Harvesting', 'Fake Login CSS', 'Suspicious Domain'],
+    try {
+      const response = await fetch('http://127.0.0.1:8000/investigate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url }),
       });
-    }, 3000);
+
+      if (!response.ok) {
+        throw new Error(`Server Ghosted Us! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      setLogs(prev => [...prev, '[ANALYSIS] Data received.', '[SUCCESS] Mission Complete.']);
+      setScanResult({
+        verdict: data.verdict,
+        riskScore: data.risk_score, 
+        threats: data.threats,
+        screenshot: data.screenshot
+      });
+
+    } catch (error) {
+      console.error(error);
+      setLogs(prev => [...prev, `[ERROR] Connection Failed: ${error.message}`]);
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   return (
@@ -38,7 +76,7 @@ function App() {
       )}
 
       <header className="flex flex-col md:flex-row justify-between items-center mb-10 border-b border-green-900 pb-5 relative z-10">
-        <h1 className="text-4xl font-black flex items-center gap-4 italic tracking-tighter">
+        <h1 className="text-4xl font-black flex items-center gap-4 italic tracking-tighter text-green-500">
           <Ghost className="w-10 h-10 animate-pulse text-purple-500" />
           GHOST-BUSTER <span className="text-white bg-green-900 px-2 not-italic">AGENCY</span>
         </h1>
@@ -49,9 +87,8 @@ function App() {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
-        {/* LEFT COLUMN: Input, Radar, Terminal, AND NOW BAIT GENERATOR */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-zinc-900 border-2 border-green-900 p-6 shadow-[4px_4px_0px_0px_rgba(34,197,94,1)] glow-green transition-all duration-500">
+          <div className="bg-zinc-900 border-2 border-green-900 p-6 shadow-[4px_4px_0px_0px_rgba(34,197,94,1)] glow-green">
             <div className="flex flex-col md:flex-row gap-6 items-center">
               <div className="flex-1 w-full">
                 <label className="block text-sm mb-2 font-bold uppercase underline text-green-800 tracking-widest">Target_Infiltration_Link:</label>
@@ -59,7 +96,7 @@ function App() {
                   <input 
                     type="text" 
                     placeholder="https://suspect-site.com"
-                    className="flex-1 bg-black border border-green-800 p-3 outline-none focus:border-green-400 text-white placeholder:text-zinc-900"
+                    className="flex-1 bg-black border border-green-800 p-3 outline-none focus:border-green-400 text-white"
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                   />
@@ -78,11 +115,12 @@ function App() {
           
           <Terminal logs={logs} isScanning={isScanning} />
 
-          {/* MOVED HERE: Wider layout for the Bait Generator */}
-          {scanResult?.verdict === 'MALICIOUS' && <BaitGenerator />}
+          {/* Connects to your styled component below */}
+          {scanResult?.verdict === 'MALICIOUS' && (
+            <BaitGenerator onGenerate={generatePoison} />
+          )}
         </div>
 
-        {/* RIGHT COLUMN: Just the Report now */}
         <div className="space-y-6 h-full">
           <Report scanResult={scanResult} isScanning={isScanning} />
         </div>
