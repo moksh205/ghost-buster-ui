@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ShieldCheck, Cpu, Zap, Lock } from "lucide-react";
+import { Ghost, Cpu, Zap, Lock } from "lucide-react"; 
 
 const IntroScreen = ({ onEnter }) => {
   const [progress, setProgress] = useState(0);
@@ -15,9 +15,9 @@ const IntroScreen = ({ onEnter }) => {
           setTimeout(onEnter, 200); // Small delay at 100% before switch
           return 100;
         }
-        return prev + 6; // Speed of loading
+        return prev + 6;
       });
-    }, 30); // Runs every 30ms
+    }, 30); 
 
     return () => clearInterval(interval);
   }, [onEnter]);
@@ -34,7 +34,7 @@ const IntroScreen = ({ onEnter }) => {
 
       <div className="z-10 relative flex flex-col items-center max-w-3xl w-full mx-4 text-center">
         
-        {/* LOGO AREA */}
+        {/* LOGO AREA - Ghost Icon is Back */}
         <motion.div 
           initial={{ y: 20, opacity: 0 }} 
           animate={{ y: 0, opacity: 1 }} 
@@ -42,11 +42,11 @@ const IntroScreen = ({ onEnter }) => {
         >
             <div className="flex justify-center mb-6">
                 <div className="p-4 bg-green-500/10 rounded-full border border-green-500/20 shadow-[0_0_30px_rgba(34,197,94,0.3)] animate-pulse">
-                    <ShieldCheck size={64} className="text-green-400" />
+                    <Ghost size={64} className="text-green-400" />
                 </div>
             </div>
             
-            {/* --- NEW NAME --- */}
+            {/* --- NAME: CYBER-GHOST-BUSTER --- */}
             <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white mb-2 uppercase">
                 CYBER-<span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600">GHOST-BUSTER</span>
             </h1>
@@ -70,12 +70,12 @@ const IntroScreen = ({ onEnter }) => {
 
             {/* Loading Status Text */}
             <div className="flex justify-between text-[10px] font-mono text-green-500/80 uppercase tracking-widest">
-                <span>{progress < 100 ? "Loading Core Modules..." : "System Ready"}</span>
+                <span>{progress < 100 ? "Initializing Core..." : "System Ready"}</span>
                 <span>{progress}%</span>
             </div>
         </div>
 
-        {/* Feature Pills (Faded in background) */}
+        {/* Feature Pills */}
         <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.5 }}
