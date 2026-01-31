@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Ghost, Zap, Search, Activity, ShieldCheck, Terminal as TerminalIcon, Cpu, Globe, Lock, Server, ArrowRight, FileWarning } from 'lucide-react';
+import { Ghost, Zap, Search, Activity, ShieldCheck, Terminal as TerminalIcon, Cpu, Globe, Lock, Server, ArrowRight, FileWarning, AlertTriangle, CheckCircle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 // Components
@@ -9,8 +9,84 @@ import Report from './components/Report';
 import GhostRadar from './components/GhostRadar';
 import BaitGenerator from './components/BaitGenerator';
 import IntroScreen from './components/IntroScreen';
+// import NetworkForensics from './components/NetworkForensics'; // REMOVED as requested
 
-// --- 1. INJECT CUSTOM ANIMATION STYLES ---
+// --- 1. NEW COMPONENT: AI CONFIDENCE GAUGE ---
+const AIConfidenceGauge = ({ isScanning, scanResult }) => {
+  // Determine threat level and color
+  const riskScore = scanResult?.riskScore || 0;
+  let statusColor = "text-emerald-500";
+  let barColor = "bg-emerald-500";
+  let statusText = "SYSTEM SECURE";
+  let Icon = CheckCircle;
+
+  if (riskScore > 75) {
+    statusColor = "text-red-500";
+    barColor = "bg-red-500";
+    statusText = "CRITICAL THREAT";
+    Icon = AlertTriangle;
+  } else if (riskScore > 40) {
+    statusColor = "text-orange-500";
+    barColor = "bg-orange-500";
+    statusText = "SUSPICIOUS ACTIVITY";
+    Icon = Activity;
+  }
+
+  return (
+    <div className={`flex flex-col gap-3 transition-all duration-500 ${isScanning ? "opacity-100" : "opacity-90"}`}>
+      <div className="flex items-center gap-2 px-1">
+        <Cpu className={`w-4 h-4 ${isScanning ? "text-blue-400 animate-pulse" : "text-blue-500"}`} />
+        <h3 className="text-xs font-bold text-blue-500 uppercase tracking-[0.2em] italic">AI_THREAT_CONFIDENCE</h3>
+      </div>
+      
+      <div className={`bg-zinc-950 border p-5 rounded-3xl transition-all duration-500 shadow-2xl ${
+        isScanning 
+          ? "border-blue-500 shadow-[0_0_40px_rgba(59,130,246,0.25)] bg-[#05080a]" 
+          : "border-zinc-800 shadow-none bg-[#050505]"
+      }`}>
+        <div className="space-y-4">
+            <div className="flex justify-between items-end">
+                <div className="flex items-center gap-2">
+                    <Icon className={`w-5 h-5 ${isScanning ? 'text-zinc-500' : statusColor}`} />
+                    <span className={`text-sm font-black tracking-wider ${isScanning ? 'text-zinc-500 animate-pulse' : statusColor}`}>
+                        {isScanning ? "CALCULATING PROBABILITY..." : statusText}
+                    </span>
+                </div>
+                <span className="text-2xl font-mono font-bold text-white">
+                    {isScanning ? <span className="animate-pulse">--</span> : riskScore}%
+                </span>
+            </div>
+
+            {/* Progress Bar Container */}
+            <div className="h-3 w-full bg-zinc-900 rounded-full overflow-hidden border border-zinc-800 relative">
+                {/* Grid overlay for 'tech' look */}
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-30 z-10"></div>
+                
+                {/* The Bar */}
+                <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${isScanning ? 100 : riskScore}%` }}
+                    transition={{ duration: isScanning ? 2 : 1, repeat: isScanning ? Infinity : 0 }}
+                    className={`h-full ${isScanning ? 'bg-blue-500/50' : barColor} shadow-[0_0_15px_currentColor] relative`}
+                >
+                    {isScanning && <div className="absolute top-0 bottom-0 right-0 w-4 bg-white/50 blur-sm"></div>}
+                </motion.div>
+            </div>
+
+            <div className="flex justify-between text-[10px] text-zinc-600 font-mono uppercase">
+                <span>Safe</span>
+                <span>Suspicious</span>
+                <span>Critical</span>
+            </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+// --- REST OF YOUR ORIGINAL CODE (Unchanged except replacing NetworkForensics) ---
+
 const styles = `
   @keyframes border-flow {
     0% { background-position: 0% 50%; }
@@ -29,7 +105,6 @@ const styles = `
   }
 `;
 
-// --- 2. SPOTLIGHT CARD (Updated for High-Intensity Constant Glow) ---
 const SpotlightCard = ({ children, className = "", noPadding = false, isScanning = false, scanColor = "emerald" }) => {
   const divRef = useRef(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -41,7 +116,6 @@ const SpotlightCard = ({ children, className = "", noPadding = false, isScanning
     setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
   };
 
-  // Intense Scanning State Logic
   const glowStyles = isScanning 
     ? scanColor === "emerald" 
       ? "border-emerald-500/60 shadow-[0_0_40px_rgba(16,185,129,0.3)] bg-[#0c120e]" 
@@ -50,9 +124,7 @@ const SpotlightCard = ({ children, className = "", noPadding = false, isScanning
 
   return (
     <div className={`relative group rounded-3xl ${className}`}>
-        {/* Snake Border Layer - Forced visible during scanning */}
         <div className={`absolute -inset-[1px] rounded-3xl transition-opacity duration-500 bg-gradient-to-r from-transparent ${scanColor === "emerald" ? "via-emerald-500" : "via-purple-500"} to-transparent animate-snake-border blur-sm ${isScanning ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
-        
         <div
             ref={divRef}
             onMouseMove={handleMouseMove}
@@ -60,7 +132,6 @@ const SpotlightCard = ({ children, className = "", noPadding = false, isScanning
             onMouseLeave={() => setOpacity(0)}
             className={`relative h-full overflow-hidden rounded-3xl border transition-all duration-500 shadow-2xl ${glowStyles} ${noPadding ? 'p-0' : 'p-6 md:p-8'}`}
         >
-            {/* Spotlight Gradient - Forced partially visible during scan to enhance glowness */}
             <div
                 className="pointer-events-none absolute -inset-px transition duration-300 z-0"
                 style={{
@@ -74,7 +145,6 @@ const SpotlightCard = ({ children, className = "", noPadding = false, isScanning
   );
 };
 
-// --- 3. ANIMATED TEXT COMPONENT ---
 const GradientText = ({ children, className = "" }) => (
   <span className={`bg-gradient-to-r from-emerald-400 via-teal-200 to-emerald-500 bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient ${className}`}>
     {children}
@@ -182,7 +252,10 @@ function App() {
               <div className="flex flex-col items-center justify-center text-center mb-28 max-w-4xl mx-auto relative px-2">
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[600px] h-[300px] md:h-[400px] bg-emerald-500/20 blur-[120px] rounded-full pointer-events-none -z-10"></div>
                   
-                
+                  <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold mb-10 tracking-widest uppercase shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                      <Zap className="w-3 h-3" /> V3.0 NOW LIVE
+                  </motion.div>
+                  
                   <h1 className="text-3xl md:text-6xl font-extrabold tracking-tight mb-8 text-white leading-tight">
                       Defend against the <br className="hidden md:block"/> <GradientText>invisible.</GradientText>
                   </h1>
@@ -262,6 +335,8 @@ function App() {
                              </div>
                         </SpotlightCard>
                       </div>
+
+                      
 
                       <div className="flex-1 min-h-[200px] flex flex-col gap-3">
                            <div className="flex items-center gap-2 px-1">
