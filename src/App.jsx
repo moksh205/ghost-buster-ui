@@ -182,10 +182,7 @@ function App() {
               <div className="flex flex-col items-center justify-center text-center mb-28 max-w-4xl mx-auto relative px-2">
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[600px] h-[300px] md:h-[400px] bg-emerald-500/20 blur-[120px] rounded-full pointer-events-none -z-10"></div>
                   
-                  <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold mb-10 tracking-widest uppercase shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                      <Zap className="w-3 h-3" /> V3.0 NOW LIVE
-                  </motion.div>
-                  
+                
                   <h1 className="text-3xl md:text-6xl font-extrabold tracking-tight mb-8 text-white leading-tight">
                       Defend against the <br className="hidden md:block"/> <GradientText>invisible.</GradientText>
                   </h1>
