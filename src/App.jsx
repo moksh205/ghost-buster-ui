@@ -10,9 +10,8 @@ import Report from './components/Report';
 import GhostRadar from './components/GhostRadar';
 import BaitGenerator from './components/BaitGenerator';
 import IntroScreen from './components/IntroScreen';
-import BlogPage from './components/BlogPage';           // Imported Blog Page
-import ThreatDatabase from './components/ThreatDatabase'; // Imported Threat Database
-
+import BlogPage from './components/BlogPage';           
+import ThreatDatabase from './components/ThreatDatabase'; 
 // --- STYLES ---
 const styles = `
   html { scroll-behavior: smooth; }
