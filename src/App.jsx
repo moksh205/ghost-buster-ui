@@ -74,7 +74,7 @@ const ScannerPage = ({ url, setUrl, isScanning, startScan, logs, scanResult, gen
         <div className="animate-fade-in">
             {/* Hero Section */}
             <div className="flex flex-col items-center justify-center text-center mb-28 max-w-4xl mx-auto relative px-2">
-                <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold mb-10 tracking-widest uppercase shadow-[0_0_15px_rgba(16,185,129,0.3)]"><Zap className="w-3 h-3" /> V3.0 NOW LIVE</motion.div>
+               
                 <h1 className="text-3xl md:text-6xl font-extrabold tracking-tight mb-8 text-white leading-tight">Defend against the <br className="hidden md:block"/> <GradientText>invisible.</GradientText></h1>
                 <p className="text-zinc-400 mb-12 text-sm md:text-lg max-w-2xl leading-relaxed">The first automated phishing investigation platform that neutralizes threats using offensive AI counter-measures.</p>
                 <div className="w-full max-w-2xl relative group z-30">
