@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Database, Search, ShieldAlert, X, Calendar, Globe, AlertTriangle, CheckCircle, Bug, Terminal, Activity } from 'lucide-react';
+import { Database, Search, ShieldAlert, Calendar, Globe, CheckCircle, Bug, Terminal, Activity, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const ThreatDatabase = ({ onClose }) => {
+const ThreatDatabase = () => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
@@ -17,45 +17,42 @@ const ThreatDatabase = ({ onClose }) => {
       .catch(err => setLoading(false));
   }, []);
 
+  // Filter logic
   const filteredReports = reports.filter(r => r.url.toLowerCase().includes(filter.toLowerCase()));
 
+  // Helper to clean URL for display (removes https://www for cleaner look)
+  const cleanUrl = (url) => url.replace(/(^\w+:|^)\/\//, '').replace('www.', '');
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-      
-      {/* --- MAIN MODAL CONTAINER --- */}
-      <div className="w-full max-w-7xl h-[85vh] rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] relative flex flex-col border border-zinc-800 bg-[#0a0a0a]">
-        
+    <motion.div 
+        initial={{ opacity: 0, y: 20 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        className="w-full h-[85vh] rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] relative flex flex-col border border-zinc-800 bg-[#0a0a0a]"
+    >
         {/* ===================================================================================== */}
-        {/* --- CUSTOM CSS CYBER BACKGROUND (Guaranteed to show) --- */}
+        {/* --- CUSTOM CSS CYBER BACKGROUND --- */}
         {/* ===================================================================================== */}
         <div className="absolute inset-0 z-0 pointer-events-none">
-            {/* 1. Base Dark Layer */}
             <div className="absolute inset-0 bg-[#050505]"></div>
-            
-            {/* 2. Cyber Grid Pattern */}
+            {/* Cyber Grid Pattern */}
             <div className="absolute inset-0 opacity-20" 
                  style={{ 
                      backgroundImage: `linear-gradient(rgba(16, 185, 129, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(16, 185, 129, 0.3) 1px, transparent 1px)`,
                      backgroundSize: '40px 40px'
                  }}>
             </div>
-
-            {/* 3. Radar Scanline Animation */}
+            {/* Radar Scanline Animation */}
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-500/5 to-transparent animate-scanline pointer-events-none"></div>
-            
-            {/* 4. Vignette (Dark Edges) */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#000_100%)]"></div>
         </div>
-        {/* ===================================================================================== */}
 
-
-        {/* --- CONTENT LAYER (Relative z-10) --- */}
+        {/* --- CONTENT LAYER --- */}
         <div className="relative z-10 flex flex-col h-full">
             
             {/* Header */}
             <div className="px-8 py-6 border-b border-zinc-800 flex justify-between items-center bg-black/40 backdrop-blur-md">
                 <div className="flex items-center gap-5">
-                    <div className="relative p-3 bg-red-500/10 rounded-xl border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.2)] overflow-hidden">
+                    <div className="relative p-3 bg-red-500/10 rounded-xl border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
                         <div className="absolute inset-0 bg-red-500/20 blur-xl"></div>
                         <Database className="relative w-8 h-8 text-red-500" />
                     </div>
@@ -70,9 +67,6 @@ const ThreatDatabase = ({ onClose }) => {
                         </div>
                     </div>
                 </div>
-                <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-all border border-transparent hover:border-zinc-700 group">
-                    <X className="w-6 h-6 text-zinc-500 group-hover:text-white" />
-                </button>
             </div>
 
             {/* Search Toolbar */}
@@ -129,9 +123,9 @@ const ThreatDatabase = ({ onClose }) => {
                             {filteredReports.map((report, idx) => (
                                 <motion.tr 
                                     key={idx} 
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.03 }}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: idx * 0.05 }}
                                     className="group hover:bg-white/[0.02] transition-colors duration-200"
                                 >
                                     {/* URL */}
@@ -140,8 +134,8 @@ const ThreatDatabase = ({ onClose }) => {
                                             <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 group-hover:border-emerald-500/30 group-hover:bg-emerald-500/10 transition-all">
                                                 <Globe className="w-4 h-4 text-zinc-500 group-hover:text-emerald-400" />
                                             </div>
-                                            <span className="text-zinc-200 font-mono text-sm font-medium truncate max-w-[380px] group-hover:text-white transition-colors">
-                                                {report.url}
+                                            <span className="text-zinc-200 font-mono text-sm font-medium truncate max-w-[380px] group-hover:text-white transition-colors" title={report.url}>
+                                                {cleanUrl(report.url)}
                                             </span>
                                         </div>
                                     </td>
@@ -149,8 +143,10 @@ const ThreatDatabase = ({ onClose }) => {
                                     {/* Type */}
                                     <td className="py-4 px-4">
                                         <div className="flex items-center gap-2">
-                                            <Bug className="w-4 h-4 text-zinc-600" />
-                                            <span className="text-zinc-400 font-mono text-[11px] uppercase font-bold tracking-wider">
+                                            {report.threat_type === "Safe Entity" ? <CheckCircle className="w-3 h-3 text-emerald-500" /> : <Bug className="w-3 h-3 text-red-500" />}
+                                            <span className={`font-mono text-[10px] uppercase font-bold tracking-wider ${
+                                                report.threat_type === "Safe Entity" ? "text-emerald-400" : "text-red-400"
+                                            }`}>
                                                 {report.threat_type || "UNKNOWN"}
                                             </span>
                                         </div>
@@ -160,8 +156,8 @@ const ThreatDatabase = ({ onClose }) => {
                                     <td className="py-4 px-4 text-center">
                                         <span className={`inline-flex items-center gap-2 px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest border ${
                                             report.verdict === 'MALICIOUS' 
-                                                ? 'bg-red-950/30 text-red-400 border-red-500/20' 
-                                                : 'bg-emerald-950/30 text-emerald-400 border-emerald-500/20'
+                                                ? 'bg-red-950/30 text-red-400 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.2)]' 
+                                                : 'bg-emerald-950/30 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]'
                                         }`}>
                                             {report.verdict === 'MALICIOUS' ? <ShieldAlert className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
                                             {report.verdict}
@@ -171,12 +167,17 @@ const ThreatDatabase = ({ onClose }) => {
                                     {/* Risk Score */}
                                     <td className="py-4 px-4 text-center">
                                         <div className="flex flex-col items-center justify-center gap-1">
-                                            <span className={`text-xs font-mono font-bold ${report.risk_score > 50 ? "text-red-500" : "text-emerald-500"}`}>
+                                            <span className={`text-xs font-mono font-bold ${report.risk_score > 75 ? "text-red-500" : report.risk_score > 40 ? "text-orange-400" : "text-emerald-500"}`}>
                                                 {report.risk_score}%
                                             </span>
-                                            <div className="w-16 h-1 bg-zinc-800/50 rounded-full overflow-hidden">
+                                            <div className="w-16 h-1.5 bg-zinc-800 rounded-full overflow-hidden flex">
+                                                {/* Segmented Risk Bar */}
                                                 <div 
-                                                    className={`h-full rounded-full shadow-[0_0_8px_currentColor] ${report.risk_score > 50 ? 'bg-red-500' : 'bg-emerald-500'}`} 
+                                                    className={`h-full transition-all duration-500 ${
+                                                        report.risk_score > 75 ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]' 
+                                                        : report.risk_score > 40 ? 'bg-orange-500' 
+                                                        : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]'
+                                                    }`} 
                                                     style={{ width: `${report.risk_score}%` }}
                                                 ></div>
                                             </div>
@@ -186,7 +187,7 @@ const ThreatDatabase = ({ onClose }) => {
                                     {/* Timestamp */}
                                     <td className="py-4 px-8 text-right">
                                         <div className="flex items-center justify-end gap-2 text-zinc-500 group-hover:text-zinc-300">
-                                            <span className="text-[11px] font-mono opacity-70">{report.timestamp}</span>
+                                            <span className="text-[10px] font-mono opacity-70">{report.timestamp}</span>
                                         </div>
                                     </td>
                                 </motion.tr>
@@ -219,8 +220,7 @@ const ThreatDatabase = ({ onClose }) => {
                 to { transform: rotate(0deg); }
             }
         `}</style>
-      </div>
-    </div>
+    </motion.div>
   );
 };
 
